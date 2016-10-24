@@ -1,0 +1,65 @@
+<!DOCTYPE HTML>
+<html>
+
+<head>
+<meta charset="UTF-8">
+<title>Main</title>
+<style>
+	html,
+	head,
+	body {
+		padding: 0;
+		margin: 0;
+	}
+	
+	body {
+		font-family: calibri, helvetica, arial, sans-serif;
+	}
+</style>
+</head>
+
+<body>
+	<script></script>
+	<!--<div id="main"></div>-->
+	<script src="main.js"></script>
+	<script>
+		var app = Elm.Main.fullscreen();
+
+		window.fbAsyncInit = function() {
+
+			FB.init({ 
+				appId : 'xxxxxxxxxxxxxxxx', 
+				status : true, 
+				xfbml : false, 
+				version : 'v2.7' // or v2.6, v2.5, v2.4, v2.3 
+			});
+
+			FB.getLoginStatus(function(response) {
+				if (response.status === 'connected') {
+					console.log('Logged in.');
+				}
+				else {
+					console.log('Logged out');
+					//FB.login();
+				}
+
+				app.ports.statusChange.send(response.status);
+			});
+			
+		};
+
+		(function(d, s, id){
+			var js, fjs = d.getElementsByTagName(s)[0];
+			if (d.getElementById(id)) return;
+			js = d.createElement(s); 
+			js.id = id; d; 
+			js.async = true;
+			js.src = "//connect.facebook.net/es_LA/sdk.js";
+			fjs.parentNode.insertBefore(js, fjs);
+		}(document, 'script', 'facebook-jssdk'));
+
+	</script>
+
+</body>
+
+</html>
