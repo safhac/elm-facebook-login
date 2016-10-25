@@ -2,9 +2,9 @@ port module Main exposing (..)
 
 import Html exposing (..)
 import Html.App as App
-import Html.Attributes exposing (..)
-import Html.Events exposing (..)
-import String
+import Facebook
+-- import Html.Attributes exposing (..)
+import Html.Events exposing (onClick)
 
 
 main =
@@ -36,6 +36,9 @@ init =
 type Msg
     = NoOp
     | StatusChange String
+    | Login
+    | Logout
+
 
 
 port statusChange : (String -> msg) -> Sub msg
@@ -51,10 +54,13 @@ update msg model =
         NoOp ->
             ( model, Cmd.none )
 
+        Login ->
+            ( model, Facebook.login {})
 
+        Logout ->
+            ( model, Facebook.logout {})
 
 -- SUBSCRIPTIONS
-
 
 subscriptions : Model -> Sub Msg
 subscriptions model =
@@ -69,5 +75,9 @@ view : Model -> Html Msg
 view model =
     div []
         [ div [] [ text model.userStatus ]
-        , button [ ] [ text "Check" ]
+        , 
+        if model.userStatus == "connected" then
+            button [ onClick Logout] [ text "Logout" ]
+        else
+            button [ onClick Login ] [ text "Login" ]
         ]
