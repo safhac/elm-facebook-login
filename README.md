@@ -25,34 +25,24 @@ git add .
 git commit -m 'first commit'
 ```
 
-If you haven't done so yet, install Elm globally:
+Install Elm and elm-live globally:
 ```
-npm install -g elm
+npm install -g elm elm-live
 ```
 
 Install Elm's dependencies:
 ```
 elm package install
 ```
-### Use elm make or install elm-live
+### Add a start script to your package.json
 ```
-elm-make Main.elm --output=main.js
-```
-### Serve locally:
-```
-elm-reactor
+"start" : "elm-live src/Main.elm --output=src/main.js --port=8000 --open"
 ```
 * Access app at `http://localhost:8000/`
-* Get coding! The entry point file is `Main.elm`
+* Get coding! The entry point file is `src/Main.elm`
 * Browser will refresh automatically on any file changes..
 
 
-### Build & bundle for prod:
-```
-npm run build
-```
 
-* Files are saved into the `/dist` folder
-* To check it, open `dist/index.html`
 
 

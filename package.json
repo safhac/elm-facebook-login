@@ -2,14 +2,19 @@
   "name": "elm-facebook-api",
   "version": "1.0.0",
   "description": "Elm app that interop's Facebook API to authenticate users",
-  "main": "src/elm.compiled.js",
+  "main": "src/main.js",
   "scripts": {
-    "test": "echo \"Error: no test specified\" && exit 1"
+    "test": "echo \"Error: no test specified\" && exit 1",
+    "start" : "elm-live src/Main.elm --output=src/main.js --port=8000 --open"
   },
   "keywords": [
     "Elm",
     "Facebook"
   ],
   "author": "Asaf Cohen <safhac@gmail.com>",
-  "license": "free"
+  "license": "free",
+  "repository": {
+    "type": "git",
+    "url": "git@github.com:safhac/elm0.17-facebook-login"
+  }
 }
