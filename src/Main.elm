@@ -1,14 +1,14 @@
 port module Main exposing (..)
 
 import Html exposing (..)
-import Html.App as App
+import Html 
 import Facebook
 -- import Html.Attributes exposing (..)
 import Html.Events exposing (onClick)
 
-
+main : Program Never Model Msg
 main =
-    App.program
+    Html.program
         { init = init
         , view = view
         , update = update
@@ -23,6 +23,18 @@ main =
 type alias Model =
     { userStatus : String
     }
+
+type alias User =
+  { name : String
+  , imgUrl : String
+  , loginStatus : String
+  , userType : UserType
+  }
+
+type UserType =
+    Client
+    | Vendor
+    | Runner 
 
 
 init : ( Model, Cmd Msg )

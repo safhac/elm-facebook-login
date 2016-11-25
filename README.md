@@ -1,10 +1,9 @@
 # elm-facebook-login
 
-A completely basic Elm 0.17 app for logging in with facebook authorization
+A completely basic Elm ~~0.17~~ 0.18 app for logging in with facebook authorization
 
 * Work in progress
-* Model needs to describe the log-in statuses 
-* View needs to display login/logout buttons  
+* Model needs to logged-in user data and unauthorized users
 
 
 (Readme copied and modified from https://github.com/moarwick/elm-webpack-starter)

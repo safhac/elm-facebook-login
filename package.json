@@ -3,6 +3,7 @@
   "version": "1.0.0",
   "description": "Elm app that interop's Facebook API to authenticate users",
   "main": "src/main.js",
+  "source-directories" : "./src",
   "scripts": {
     "test": "echo \"Error: no test specified\" && exit 1",
     "start" : "elm-live src/Main.elm --output=src/main.js --port=8000 --open"
