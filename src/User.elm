@@ -1,6 +1,6 @@
 module User exposing (..)
 
-import Json.Decode as Decode exposing (decodeString, field, string)
+import Json.Decode as Decode exposing (decodeString, field, string, at, Decoder, map2)
 import Debug exposing (log)
 
 
@@ -37,6 +37,14 @@ initialUser =
     , userType = Unknown
     }
 
+newUser : String -> String -> Model
+newUser name picture =
+    { name = name
+    , url = picture
+    , loginStatus = Connected
+    , userType = Client
+    }
+
 
 
 -- MESSAGES
@@ -51,9 +59,15 @@ type Msg
 -- DECODER
 
 nameDecoder : String -> Result String String
-nameDecoder js =
-    decodeString (field "name" string) js
+nameDecoder json =
+    decodeString (field "name" string) json
 
+
+userDecoder : Decoder Model
+userDecoder =
+    map2 newUser
+        (field "name" string) 
+        (field "picture" <| (field "data" <| (field "url" string) )) 
 
 setName : String -> Model -> Model
 setName newName user =
@@ -69,17 +83,18 @@ update : Msg -> Model -> ( Model, Cmd Msg )
 update msg model =
     case msg of
         UserLoggedIn json ->
-            case nameDecoder json of
-                (Ok newName) ->
-                    let _ = 
-                        Debug.log "name" newName
-                    in
-                        ({ model | name = newName, loginStatus=Connected }, Cmd.none)
+            -- let _ = 
+            --     Debug.log "json" (decodeString userDecoder json)
+            -- in
+            case decodeString userDecoder json of
+                (Ok userData) ->
+                    ({ model | name = userData.name, url=userData.url, loginStatus=Connected }, Cmd.none)
                 (Err error) ->
                     let _ = 
                         Debug.log "error" error
                     in
-                    (model, Cmd.none)        
+                    (model, Cmd.none)   
+                 
         UserLoggedOut loggedOut ->
             ( initialUser , Cmd.none)
                 

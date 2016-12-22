@@ -1,6 +1,7 @@
 port module Main exposing (..)
 
 import Html exposing (..)
+import Html.Attributes exposing (..)
 import Html
 import Facebook
 import User
@@ -120,7 +121,8 @@ view app =
         User.Connected ->
             div []
                 [ div [] [ text app.userModel.name ]
-                , loggedInHtml
+                , loggedInHtml app.userModel.url
+                
                 ]
         _ ->
             div []
@@ -129,10 +131,11 @@ view app =
                 ]
 
 
-loggedInHtml : Html Msg
-loggedInHtml =
-    button [ onClick Logout ] [ text "Logout" ]
-
+loggedInHtml : String -> Html Msg
+loggedInHtml pic =
+    div [] [ img [ src pic ] [] 
+    , button [ onClick Logout ] [ text "Logout" ]
+    ]
 
 loggedOutHtml : Html Msg
 loggedOutHtml =
