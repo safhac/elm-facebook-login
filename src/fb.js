@@ -14,16 +14,19 @@ window.fbAsyncInit = function () {
             console.log('Logged in.');
             var uid = response.authResponse.userID;
             var accessToken = response.authResponse.accessToken;
+            var userData = JSON.stringify(response);
+            app.ports.userLoggedIn.send(userData);
         }
         else if (response.status === 'not_authorized') {
             console.log('Unauthorized');
         }
         else {
             console.log('Logged out');
+            
             //FB.login();
         }
-
-        app.ports.statusChange.send(response.status);
+        app.ports.userLoggedOut.send(response.status);
+        
 
     }, true);
 
@@ -44,7 +47,7 @@ app.ports.logout.subscribe(function () {
 
     FB.logout(function (response) {
         console.log('Logging out ' + response);
-        app.ports.statusChange.send(response.status);
+        app.ports.userLoggedOut.send(response.status);
         // user is now logged out
     });
 });
@@ -57,7 +60,7 @@ app.ports.login.subscribe(function () {
             FB.api('/me?fields=name,picture', function (response) {
                 
                 var userData = JSON.stringify(response);
-                app.ports.statusChange.send(userData); //response
+                app.ports.userLoggedIn.send(userData);
             });
         } else {
             console.log('User cancelled login or did not fully authorize.');

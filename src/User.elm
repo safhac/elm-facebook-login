@@ -3,44 +3,52 @@ module User exposing (..)
 import Json.Decode as Decode exposing (decodeString, field, string)
 import Debug exposing (log)
 
+
 -- MODEL
 
 
 type alias Model =
     { name : String
     , url : String
-    , loginStatus : String
+    , loginStatus : LoginStatus
     , userType : UserType
     }
 
 
 type UserType
-    = Annonymous
+    = Unknown
     | Client
     | Vendor
     | Runner
 
-
+type LoginStatus
+    = Connected
+    | UnAuthorised
+    | Disconnected
 
 -- INIT
 
 
 initialUser : Model
 initialUser =
-    { name = "anonymous"
+    { name = ""
     , url = ""
-    , loginStatus = "unknown"
-    , userType = Annonymous
+    , loginStatus = UnAuthorised
+    , userType = Unknown
     }
 
 
--- Messages
+
+-- MESSAGES
 
 type Msg
-    = UserStatusChange String
+    = UserLoggedIn String
+    | UserLoggedOut String
 
 
 
+
+-- DECODER
 
 nameDecoder : String -> Result String String
 nameDecoder js =
@@ -52,35 +60,35 @@ setName newName user =
   ({ user | name = newName })
 
 
--- update
+
+
+-- UPDATE
 
 
 update : Msg -> Model -> ( Model, Cmd Msg )
 update msg model =
     case msg of
-        UserStatusChange json ->
+        UserLoggedIn json ->
             case nameDecoder json of
                 (Ok newName) ->
                     let _ = 
                         Debug.log "name" newName
                     in
-                        ({ model | name = newName, loginStatus="connected" }, Cmd.none)
+                        ({ model | name = newName, loginStatus=Connected }, Cmd.none)
                 (Err error) ->
-                    (model, Cmd.none)
+                    let _ = 
+                        Debug.log "error" error
+                    in
+                    (model, Cmd.none)        
+        UserLoggedOut loggedOut ->
+            ( initialUser , Cmd.none)
                 
 
             
-            -- ( { model
-            --     | name = toString (model.name)
-            --     , url = toString (model.name)
-            --     , loginStatus = "connected"
-            --   }
-            -- , Cmd.none
-            -- )
+
+-- VIEW
 
 
-
--- view
 -- view : Model -> Html Msg
 -- view model =
 --     div []

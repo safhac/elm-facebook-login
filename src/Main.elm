@@ -5,10 +5,10 @@ import Html
 import Facebook
 import User
 import Html.Events exposing (onClick)
-
-
 import Debug exposing (log)
 -- import Html.Attributes exposing (..)
+
+
 -- MAIN
 
 
@@ -30,10 +30,12 @@ type alias AppModel =
     { userModel : User.Model
     }
 
+
 initialModel : AppModel
 initialModel =
     { userModel = User.initialUser
     }
+
 
 init : ( AppModel, Cmd Msg )
 init =
@@ -41,32 +43,40 @@ init =
 
 
 
--- UPDATE
-
+-- MESSAGE
 
 type Msg
     = NoOp
     | Login
     | Logout
-    | StatusChange String
+    | LoggedIn String
+    | LoggedOut String
     | UserMsg User.Msg
-    | UserStringMsg String 
 
 
-port statusChange : (String -> msg) -> Sub msg
+
+
+-- PORTS
+
+port userLoggedIn : (String -> msg) -> Sub msg
+port userLoggedOut : (String -> msg) -> Sub msg
+
+
 
 -- SUBSCRIPTIONS
 
 
 subscriptions : AppModel -> Sub Msg
 subscriptions model =
-    statusChange StatusChange
-    -- Sub.map statusChange User.UserStatusChange
+    Sub.batch
+    [ userLoggedIn LoggedIn
+    , userLoggedOut LoggedOut
+    ]
 
 
-stringToMsg : String -> Msg
-stringToMsg json =
-    UserStringMsg json
+-- stringToMsg : String -> Msg
+-- stringToMsg json =
+--     UserStringMsg json
     
 
 -- UPDATE
@@ -74,19 +84,20 @@ stringToMsg json =
 update : Msg -> AppModel -> ( AppModel, Cmd Msg )
 update msg model =
     case msg of
-        UserMsg subMsg ->
+
+        LoggedIn json ->
             let
                 (updatedUserModel, userCmd) =
-                    User.update subMsg model.userModel
+                    User.update (User.UserLoggedIn json) model.userModel
             in
                  ({ model | userModel = updatedUserModel }, Cmd.map UserMsg userCmd) 
 
-        StatusChange json ->
+        LoggedOut loggedOutMsg ->
             let
                 (updatedUserModel, userCmd) =
-                    User.update (User.UserStatusChange json) model.userModel
+                    User.update (User.UserLoggedOut loggedOutMsg) model.userModel
             in
-                 ({ model | userModel = updatedUserModel }, Cmd.map UserMsg userCmd) 
+                 ({ model | userModel = updatedUserModel }, Cmd.none) 
 
         Login ->
             ( model, Facebook.login {} )
@@ -104,22 +115,18 @@ update msg model =
 
 
 view : AppModel -> Html Msg
-view model =
-    let
-        user =
-            model.userModel
-
-        -- model.userStatus
-    in
-        div []
-            [ div [] [ text user.name ]
-            , case user.loginStatus of
-                "connected" ->
-                    loggedInHtml
-
-                _ ->
-                    loggedOutHtml
-            ]
+view app =
+    case app.userModel.loginStatus of
+        User.Connected ->
+            div []
+                [ div [] [ text app.userModel.name ]
+                , loggedInHtml
+                ]
+        _ ->
+            div []
+                [ div [] [ text app.userModel.name ]
+                , loggedOutHtml
+                ]
 
 
 loggedInHtml : Html Msg
