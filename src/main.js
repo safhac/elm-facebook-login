@@ -7917,20 +7917,93 @@ var _user$project$Facebook$logout = _elm_lang$core$Native_Platform.outgoingPort(
 		return {};
 	});
 
+var _user$project$User$setName = F2(
+	function (newName, user) {
+		return _elm_lang$core$Native_Utils.update(
+			user,
+			{name: newName});
+	});
+var _user$project$User$nameDecoder = function (js) {
+	return A2(
+		_elm_lang$core$Json_Decode$decodeString,
+		A2(_elm_lang$core$Json_Decode$field, 'name', _elm_lang$core$Json_Decode$string),
+		js);
+};
+var _user$project$User$update = F2(
+	function (msg, model) {
+		var _p0 = msg;
+		var _p1 = _user$project$User$nameDecoder(_p0._0);
+		if (_p1.ctor === 'Ok') {
+			var _p3 = _p1._0;
+			var _p2 = A2(_elm_lang$core$Debug$log, 'name', _p3);
+			return {
+				ctor: '_Tuple2',
+				_0: _elm_lang$core$Native_Utils.update(
+					model,
+					{name: _p3, loginStatus: 'connected'}),
+				_1: _elm_lang$core$Platform_Cmd$none
+			};
+		} else {
+			return {ctor: '_Tuple2', _0: model, _1: _elm_lang$core$Platform_Cmd$none};
+		}
+	});
+var _user$project$User$Model = F4(
+	function (a, b, c, d) {
+		return {name: a, url: b, loginStatus: c, userType: d};
+	});
+var _user$project$User$Runner = {ctor: 'Runner'};
+var _user$project$User$Vendor = {ctor: 'Vendor'};
+var _user$project$User$Client = {ctor: 'Client'};
+var _user$project$User$Annonymous = {ctor: 'Annonymous'};
+var _user$project$User$initialUser = {name: 'anonymous', url: '', loginStatus: 'unknown', userType: _user$project$User$Annonymous};
+var _user$project$User$UserStatusChange = function (a) {
+	return {ctor: 'UserStatusChange', _0: a};
+};
+
+var _user$project$Main$initialModel = {userModel: _user$project$User$initialUser};
+var _user$project$Main$init = {ctor: '_Tuple2', _0: _user$project$Main$initialModel, _1: _elm_lang$core$Platform_Cmd$none};
+var _user$project$Main$statusChange = _elm_lang$core$Native_Platform.incomingPort('statusChange', _elm_lang$core$Json_Decode$string);
+var _user$project$Main$AppModel = function (a) {
+	return {userModel: a};
+};
+var _user$project$Main$UserStringMsg = function (a) {
+	return {ctor: 'UserStringMsg', _0: a};
+};
+var _user$project$Main$stringToMsg = function (json) {
+	return _user$project$Main$UserStringMsg(json);
+};
+var _user$project$Main$UserMsg = function (a) {
+	return {ctor: 'UserMsg', _0: a};
+};
 var _user$project$Main$update = F2(
 	function (msg, model) {
 		var _p0 = msg;
 		switch (_p0.ctor) {
-			case 'StatusChange':
+			case 'UserMsg':
+				var _p1 = A2(_user$project$User$update, _p0._0, model.userModel);
+				var updatedUserModel = _p1._0;
+				var userCmd = _p1._1;
 				return {
 					ctor: '_Tuple2',
 					_0: _elm_lang$core$Native_Utils.update(
 						model,
-						{userStatus: _p0._0}),
-					_1: _elm_lang$core$Platform_Cmd$none
+						{userModel: updatedUserModel}),
+					_1: A2(_elm_lang$core$Platform_Cmd$map, _user$project$Main$UserMsg, userCmd)
 				};
-			case 'NoOp':
-				return {ctor: '_Tuple2', _0: model, _1: _elm_lang$core$Platform_Cmd$none};
+			case 'StatusChange':
+				var _p2 = A2(
+					_user$project$User$update,
+					_user$project$User$UserStatusChange(_p0._0),
+					model.userModel);
+				var updatedUserModel = _p2._0;
+				var userCmd = _p2._1;
+				return {
+					ctor: '_Tuple2',
+					_0: _elm_lang$core$Native_Utils.update(
+						model,
+						{userModel: updatedUserModel}),
+					_1: A2(_elm_lang$core$Platform_Cmd$map, _user$project$Main$UserMsg, userCmd)
+				};
 			case 'Login':
 				return {
 					ctor: '_Tuple2',
@@ -7938,34 +8011,51 @@ var _user$project$Main$update = F2(
 					_1: _user$project$Facebook$login(
 						{})
 				};
-			default:
+			case 'Logout':
 				return {
 					ctor: '_Tuple2',
 					_0: model,
 					_1: _user$project$Facebook$logout(
 						{})
 				};
+			default:
+				return {ctor: '_Tuple2', _0: model, _1: _elm_lang$core$Platform_Cmd$none};
 		}
 	});
-var _user$project$Main$statusChange = _elm_lang$core$Native_Platform.incomingPort('statusChange', _elm_lang$core$Json_Decode$string);
-var _user$project$Main$Model = function (a) {
-	return {userStatus: a};
+var _user$project$Main$StatusChange = function (a) {
+	return {ctor: 'StatusChange', _0: a};
 };
-var _user$project$Main$init = {
-	ctor: '_Tuple2',
-	_0: _user$project$Main$Model(''),
-	_1: _elm_lang$core$Platform_Cmd$none
+var _user$project$Main$subscriptions = function (model) {
+	return _user$project$Main$statusChange(_user$project$Main$StatusChange);
 };
-var _user$project$Main$User = F4(
-	function (a, b, c, d) {
-		return {name: a, imgUrl: b, loginStatus: c, userType: d};
-	});
-var _user$project$Main$Runner = {ctor: 'Runner'};
-var _user$project$Main$Vendor = {ctor: 'Vendor'};
-var _user$project$Main$Client = {ctor: 'Client'};
 var _user$project$Main$Logout = {ctor: 'Logout'};
+var _user$project$Main$loggedInHtml = A2(
+	_elm_lang$html$Html$button,
+	{
+		ctor: '::',
+		_0: _elm_lang$html$Html_Events$onClick(_user$project$Main$Logout),
+		_1: {ctor: '[]'}
+	},
+	{
+		ctor: '::',
+		_0: _elm_lang$html$Html$text('Logout'),
+		_1: {ctor: '[]'}
+	});
 var _user$project$Main$Login = {ctor: 'Login'};
+var _user$project$Main$loggedOutHtml = A2(
+	_elm_lang$html$Html$button,
+	{
+		ctor: '::',
+		_0: _elm_lang$html$Html_Events$onClick(_user$project$Main$Login),
+		_1: {ctor: '[]'}
+	},
+	{
+		ctor: '::',
+		_0: _elm_lang$html$Html$text('Login'),
+		_1: {ctor: '[]'}
+	});
 var _user$project$Main$view = function (model) {
+	var user = model.userModel;
 	return A2(
 		_elm_lang$html$Html$div,
 		{ctor: '[]'},
@@ -7976,43 +8066,22 @@ var _user$project$Main$view = function (model) {
 				{ctor: '[]'},
 				{
 					ctor: '::',
-					_0: _elm_lang$html$Html$text(model.userStatus),
+					_0: _elm_lang$html$Html$text(user.name),
 					_1: {ctor: '[]'}
 				}),
 			_1: {
 				ctor: '::',
-				_0: _elm_lang$core$Native_Utils.eq(model.userStatus, 'connected') ? A2(
-					_elm_lang$html$Html$button,
-					{
-						ctor: '::',
-						_0: _elm_lang$html$Html_Events$onClick(_user$project$Main$Logout),
-						_1: {ctor: '[]'}
-					},
-					{
-						ctor: '::',
-						_0: _elm_lang$html$Html$text('Logout'),
-						_1: {ctor: '[]'}
-					}) : A2(
-					_elm_lang$html$Html$button,
-					{
-						ctor: '::',
-						_0: _elm_lang$html$Html_Events$onClick(_user$project$Main$Login),
-						_1: {ctor: '[]'}
-					},
-					{
-						ctor: '::',
-						_0: _elm_lang$html$Html$text('Login'),
-						_1: {ctor: '[]'}
-					}),
+				_0: function () {
+					var _p3 = user.loginStatus;
+					if (_p3 === 'connected') {
+						return _user$project$Main$loggedInHtml;
+					} else {
+						return _user$project$Main$loggedOutHtml;
+					}
+				}(),
 				_1: {ctor: '[]'}
 			}
 		});
-};
-var _user$project$Main$StatusChange = function (a) {
-	return {ctor: 'StatusChange', _0: a};
-};
-var _user$project$Main$subscriptions = function (model) {
-	return _user$project$Main$statusChange(_user$project$Main$StatusChange);
 };
 var _user$project$Main$main = _elm_lang$html$Html$program(
 	{init: _user$project$Main$init, view: _user$project$Main$view, update: _user$project$Main$update, subscriptions: _user$project$Main$subscriptions})();
