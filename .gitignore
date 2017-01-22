@@ -3,3 +3,4 @@ node_modules/
 tmp/
 dist/
 bash.exe.stackdump
+npm-debug.log
