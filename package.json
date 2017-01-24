@@ -16,6 +16,6 @@
   "license": "free",
   "repository": {
     "type": "git",
-    "url": "git@github.com:safhac/elm0.17-facebook-login"
+    "url": "git@github.com:safhac/elm-facebook-login"
   }
 }
