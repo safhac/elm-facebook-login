@@ -1,3 +1,9 @@
+// pull in desired CSS/SASS files
+require( './styles/main.scss' );
+
+// Elm.Main.embed( document.getElementById( 'main' ) );
+var Elm = require( '../elm/Main' );
+
 var storedState = localStorage.getItem('elm-facebook-api');
 var startingState = storedState ? JSON.parse(storedState) : null;
 
