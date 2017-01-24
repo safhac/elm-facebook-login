@@ -10,7 +10,7 @@ A basic Elm ~~0.17~~ 0.18 app for logging in with facebook authorization
 ### Install:
 Clone this repo into a new project folder, e.g. `my-elm-project`, and install its dependencies:
 ```
-git clone https://github.com/safhac/elm0.17-facebook-login my-elm-project
+git clone https://github.com/safhac/elm-facebook-login my-elm-project
 cd my-elm-project
 npm install
 ```
