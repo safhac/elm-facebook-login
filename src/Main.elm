@@ -8,11 +8,10 @@ import User exposing (..)
 import Html.Events exposing (onClick)
 import Json.Encode as Encode exposing (..)
 import Json.Decode as Decode exposing (..)
-
-
-
 -- import Debug exposing (log)
--- import Html.Attributes exposing (..)
+
+
+
 -- MAIN
 
 
@@ -47,11 +46,14 @@ init : Maybe (Encode.Value) -> ( AppModel, Cmd Msg )
 init savedModel =
     case savedModel of
         Just value  ->
-            Maybe.withDefault initialModel (Decode.decodeValue modelDecoder value |> resultToMaybe) ! []  
-        _ -> initialModel ! [] 
+            Maybe.withDefault initialModel (Decode.decodeValue modelDecoder value |> resultToMaybe ) ! []
+        _ -> 
+            initialModel ! [] 
 
 
-
+{--
+Decode model from localstorage
+ --}
 modelDecoder : Decode.Decoder AppModel
 modelDecoder =
   Decode.map4 modelConstructor
@@ -61,6 +63,9 @@ modelDecoder =
     (field "userType" Decode.string |> andThen User.userTypeDecoder )
 
 
+{--
+helper to create the model from the decoder
+ --}
 modelConstructor : String -> String -> User.LoginStatus -> User.UserType -> AppModel
 modelConstructor name picture status userType =
     AppModel { name = name
@@ -70,12 +75,14 @@ modelConstructor name picture status userType =
     }
 
 
+
 resultToMaybe : Result String AppModel -> Maybe AppModel
 resultToMaybe result =
   case result of
     Result.Ok model -> Just model
     Result.Err error -> Debug.log error Nothing
     
+
 -- MESSAGE
 
 
