@@ -7,7 +7,8 @@ import Facebook
 import User exposing (..)
 import Html.Events exposing (onClick)
 import Json.Encode as Encode exposing (..)
-import Json.Decode as Decode exposing (string, decodeValue, map4, andThen, at)
+import Json.Decode as Decode exposing (..)
+
 
 
 -- import Debug exposing (log)
@@ -33,27 +34,47 @@ type alias AppModel =
     }
 
 
+
+-- INIT
 initialModel : AppModel
 initialModel =
     { userModel = User.initialUser
     }
 
 
+
 init : Maybe (Encode.Value) -> ( AppModel, Cmd Msg )
 init savedModel =
     case savedModel of
         Just value  ->
-            Maybe.withDefault initialModel (Decode.decodeValue modelDecoder value) ! []   
-    -- Maybe.withDefault initialModel savedModel ! []
+            Maybe.withDefault initialModel (Decode.decodeValue modelDecoder value |> resultToMaybe) ! []  
+        _ -> initialModel ! [] 
+
+
 
 modelDecoder : Decode.Decoder AppModel
 modelDecoder =
-  Decode.map4 AppModel
-    ( Decode.at "name" Decode.string )
-    ( Decode.at "url" Decode.string )
-    ( Decode.at "loginStatus" (Decode.string User.loginStatusDecoder) )
-    ( Decode.at "userType" (Decode.string User.userTypeDecoder) )
+  Decode.map4 modelConstructor
+    (field "name" Decode.string) 
+    (field "url" Decode.string)
+    (field "loginStatus" Decode.string |> andThen User.loginStatusDecoder )
+    (field "userType" Decode.string |> andThen User.userTypeDecoder )
 
+
+modelConstructor : String -> String -> User.LoginStatus -> User.UserType -> AppModel
+modelConstructor name picture status userType =
+    AppModel { name = name
+    , url = picture
+    , loginStatus = status
+    , userType = userType
+    }
+
+
+resultToMaybe : Result String AppModel -> Maybe AppModel
+resultToMaybe result =
+  case result of
+    Result.Ok model -> Just model
+    Result.Err error -> Debug.log error Nothing
     
 -- MESSAGE
 

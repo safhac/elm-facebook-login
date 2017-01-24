@@ -1,3 +1,20 @@
+The right side of (|>) is causing a type mismatch. - (|>) is expecting the right side to be a:
+
+    Result String Model -> a
+
+But the right side is:
+
+    Result String AppModel -> Maybe AppModel
+
+Hint: The record fields do not match up. One has loginStatus, name, url, and
+userType. The other has userModel.
+
+Hint: With operators like (|>) I always check the left side first. If it seems
+fine, I assume it is correct and check the right side. So the problem may be in
+how the left and right arguments interact.
+
+=======================================================================================
+
 The definition of `main` does not match its type annotation. - The type annotation for `main` says it is a:
 
     Program (Maybe AppModel) AppModel Msg

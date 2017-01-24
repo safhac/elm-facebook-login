@@ -1564,8 +1564,7 @@ function toString(v)
 	var type = typeof v;
 	if (type === 'function')
 	{
-		var name = v.func ? v.func.name : v.name;
-		return '<function' + (name === '' ? '' : ':') + name + '>';
+		return '<function>';
 	}
 
 	if (type === 'boolean')
@@ -2072,6 +2071,13 @@ var _elm_lang$core$List$sortWith = _elm_lang$core$Native_List.sortWith;
 var _elm_lang$core$List$sortBy = _elm_lang$core$Native_List.sortBy;
 var _elm_lang$core$List$sort = function (xs) {
 	return A2(_elm_lang$core$List$sortBy, _elm_lang$core$Basics$identity, xs);
+};
+var _elm_lang$core$List$singleton = function (value) {
+	return {
+		ctor: '::',
+		_0: value,
+		_1: {ctor: '[]'}
+	};
 };
 var _elm_lang$core$List$drop = F2(
 	function (n, list) {
@@ -2891,7 +2897,7 @@ function endsWith(sub, str)
 function indexes(sub, str)
 {
 	var subLen = sub.length;
-	
+
 	if (subLen < 1)
 	{
 		return _elm_lang$core$Native_List.Nil;
@@ -2904,74 +2910,78 @@ function indexes(sub, str)
 	{
 		is.push(i);
 		i = i + subLen;
-	}	
-	
+	}
+
 	return _elm_lang$core$Native_List.fromArray(is);
 }
+
 
 function toInt(s)
 {
 	var len = s.length;
+
+	// if empty
 	if (len === 0)
 	{
-		return _elm_lang$core$Result$Err("could not convert string '" + s + "' to an Int" );
+		return intErr(s);
 	}
-	var start = 0;
-	if (s[0] === '-')
+
+	// if hex
+	var c = s[0];
+	if (c === '0' && s[1] === 'x')
 	{
-		if (len === 1)
+		for (var i = 2; i < len; ++i)
 		{
-			return _elm_lang$core$Result$Err("could not convert string '" + s + "' to an Int" );
+			var c = s[i];
+			if (('0' <= c && c <= '9') || ('A' <= c && c <= 'F') || ('a' <= c && c <= 'f'))
+			{
+				continue;
+			}
+			return intErr(s);
 		}
-		start = 1;
+		return _elm_lang$core$Result$Ok(parseInt(s, 16));
 	}
-	for (var i = start; i < len; ++i)
+
+	// is decimal
+	if (c > '9' || (c < '0' && c !== '-' && c !== '+'))
+	{
+		return intErr(s);
+	}
+	for (var i = 1; i < len; ++i)
 	{
 		var c = s[i];
 		if (c < '0' || '9' < c)
 		{
-			return _elm_lang$core$Result$Err("could not convert string '" + s + "' to an Int" );
+			return intErr(s);
 		}
 	}
+
 	return _elm_lang$core$Result$Ok(parseInt(s, 10));
 }
 
+function intErr(s)
+{
+	return _elm_lang$core$Result$Err("could not convert string '" + s + "' to an Int");
+}
+
+
 function toFloat(s)
 {
-	var len = s.length;
-	if (len === 0)
+	// check if it is a hex, octal, or binary number
+	if (s.length === 0 || /[\sxbo]/.test(s))
 	{
-		return _elm_lang$core$Result$Err("could not convert string '" + s + "' to a Float" );
+		return floatErr(s);
 	}
-	var start = 0;
-	if (s[0] === '-')
-	{
-		if (len === 1)
-		{
-			return _elm_lang$core$Result$Err("could not convert string '" + s + "' to a Float" );
-		}
-		start = 1;
-	}
-	var dotCount = 0;
-	for (var i = start; i < len; ++i)
-	{
-		var c = s[i];
-		if ('0' <= c && c <= '9')
-		{
-			continue;
-		}
-		if (c === '.')
-		{
-			dotCount += 1;
-			if (dotCount <= 1)
-			{
-				continue;
-			}
-		}
-		return _elm_lang$core$Result$Err("could not convert string '" + s + "' to a Float" );
-	}
-	return _elm_lang$core$Result$Ok(parseFloat(s));
+	var n = +s;
+	// faster isNaN check
+	return n === n ? _elm_lang$core$Result$Ok(n) : floatErr(s);
 }
+
+function floatErr(s)
+{
+	return _elm_lang$core$Result$Err("could not convert string '" + s + "' to a Float");
+}
+
 
 function toList(str)
 {
@@ -4407,11 +4417,6 @@ function badToString(problem)
 				problem = problem.rest;
 				break;
 
-			case 'index':
-				context += '[' + problem.index + ']';
-				problem = problem.rest;
-				break;
-
 			case 'oneOf':
 				var problems = problem.problems;
 				for (var i = 0; i < problems.length; i++)
@@ -5393,15 +5398,8 @@ function setupIncomingPort(name, callback)
 		sentBeforeInit.push(value);
 	}
 
-	function postInitSend(incomingValue)
+	function postInitSend(value)
 	{
-		var result = A2(_elm_lang$core$Json_Decode$decodeValue, converter, incomingValue);
-		if (result.ctor === 'Err')
-		{
-			throw new Error('Trying to send an unexpected type of value through port `' + name + '`:\n' + result._0);
-		}
-
-		var value = result._0;
 		var temp = subs;
 		while (temp.ctor !== '[]')
 		{
@@ -5412,7 +5410,13 @@ function setupIncomingPort(name, callback)
 
 	function send(incomingValue)
 	{
-		currentSend(incomingValue);
+		var result = A2(_elm_lang$core$Json_Decode$decodeValue, converter, incomingValue);
+		if (result.ctor === 'Err')
+		{
+			throw new Error('Trying to send an unexpected type of value through port `' + name + '`:\n' + result._0);
+		}
+
+		currentSend(result._0);
 	}
 
 	return { send: send };
@@ -6015,9 +6019,9 @@ function on(name, options, decoder)
 
 function equalEvents(a, b)
 {
-	if (!a.options === b.options)
+	if (a.options !== b.options)
 	{
-		if (a.stopPropagation !== b.stopPropagation || a.preventDefault !== b.preventDefault)
+		if (a.options.stopPropagation !== b.options.stopPropagation || a.options.preventDefault !== b.options.preventDefault)
 		{
 			return false;
 		}
@@ -7293,7 +7297,7 @@ function normalRenderer(parentNode, view)
 var rAF =
 	typeof requestAnimationFrame !== 'undefined'
 		? requestAnimationFrame
-		: function(callback) { callback(); };
+		: function(callback) { setTimeout(callback, 1000 / 60); };
 
 function makeStepper(domNode, view, initialVirtualNode, eventNode)
 {
@@ -8267,6 +8271,66 @@ var _user$project$Facebook$logout = _elm_lang$core$Native_Platform.outgoingPort(
 		return {};
 	});
 
+var _user$project$User$userTypeToValue = function (userType) {
+	var _p0 = userType;
+	switch (_p0.ctor) {
+		case 'Unknown':
+			return _elm_lang$core$Json_Encode$string('Unknown');
+		case 'Client':
+			return _elm_lang$core$Json_Encode$string('Client');
+		case 'Vendor':
+			return _elm_lang$core$Json_Encode$string('Vendor');
+		default:
+			return _elm_lang$core$Json_Encode$string('Runner');
+	}
+};
+var _user$project$User$loginStatusToValue = function (status) {
+	var _p1 = status;
+	switch (_p1.ctor) {
+		case 'Connected':
+			return _elm_lang$core$Json_Encode$string('Connected');
+		case 'UnAuthorised':
+			return _elm_lang$core$Json_Encode$string('UnAuthorised');
+		default:
+			return _elm_lang$core$Json_Encode$string('Disconnected');
+	}
+};
+var _user$project$User$modelToValue = function (model) {
+	return _elm_lang$core$Json_Encode$object(
+		{
+			ctor: '::',
+			_0: {
+				ctor: '_Tuple2',
+				_0: 'name',
+				_1: _elm_lang$core$Json_Encode$string(model.name)
+			},
+			_1: {
+				ctor: '::',
+				_0: {
+					ctor: '_Tuple2',
+					_0: 'url',
+					_1: _elm_lang$core$Json_Encode$string(model.url)
+				},
+				_1: {
+					ctor: '::',
+					_0: {
+						ctor: '_Tuple2',
+						_0: 'loginStatus',
+						_1: _user$project$User$loginStatusToValue(model.loginStatus)
+					},
+					_1: {
+						ctor: '::',
+						_0: {
+							ctor: '_Tuple2',
+							_0: 'userType',
+							_1: _user$project$User$userTypeToValue(model.userType)
+						},
+						_1: {ctor: '[]'}
+					}
+				}
+			}
+		});
+};
 var _user$project$User$setName = F2(
 	function (newName, user) {
 		return _elm_lang$core$Native_Utils.update(
@@ -8287,6 +8351,22 @@ var _user$project$User$Runner = {ctor: 'Runner'};
 var _user$project$User$Vendor = {ctor: 'Vendor'};
 var _user$project$User$Client = {ctor: 'Client'};
 var _user$project$User$Unknown = {ctor: 'Unknown'};
+var _user$project$User$userTypeDecoder = function (userType) {
+	var _p2 = userType;
+	switch (_p2) {
+		case 'Unknown':
+			return _elm_lang$core$Json_Decode$succeed(_user$project$User$Unknown);
+		case 'Client':
+			return _elm_lang$core$Json_Decode$succeed(_user$project$User$Client);
+		case 'Vendor':
+			return _elm_lang$core$Json_Decode$succeed(_user$project$User$Vendor);
+		case 'Runner':
+			return _elm_lang$core$Json_Decode$succeed(_user$project$User$Runner);
+		default:
+			return _elm_lang$core$Json_Decode$fail(
+				A2(_elm_lang$core$Basics_ops['++'], userType, ' is not a recognized tag for user type'));
+	}
+};
 var _user$project$User$Disconnected = {ctor: 'Disconnected'};
 var _user$project$User$UnAuthorised = {ctor: 'UnAuthorised'};
 var _user$project$User$initialUser = {name: '', url: '', loginStatus: _user$project$User$UnAuthorised, userType: _user$project$User$Unknown};
@@ -8306,22 +8386,36 @@ var _user$project$User$userDecoder = A3(
 			_elm_lang$core$Json_Decode$field,
 			'data',
 			A2(_elm_lang$core$Json_Decode$field, 'url', _elm_lang$core$Json_Decode$string))));
+var _user$project$User$loginStatusDecoder = function (status) {
+	var _p3 = status;
+	switch (_p3) {
+		case 'Connected':
+			return _elm_lang$core$Json_Decode$succeed(_user$project$User$Connected);
+		case 'UnAuthorised':
+			return _elm_lang$core$Json_Decode$succeed(_user$project$User$UnAuthorised);
+		case 'Disconnected':
+			return _elm_lang$core$Json_Decode$succeed(_user$project$User$Disconnected);
+		default:
+			return _elm_lang$core$Json_Decode$fail(
+				A2(_elm_lang$core$Basics_ops['++'], status, ' is not a recognized tag for login status'));
+	}
+};
 var _user$project$User$update = F2(
 	function (msg, model) {
-		var _p0 = msg;
-		if (_p0.ctor === 'UserLoggedIn') {
-			var _p1 = A2(_elm_lang$core$Json_Decode$decodeString, _user$project$User$userDecoder, _p0._0);
-			if (_p1.ctor === 'Ok') {
-				var _p2 = _p1._0;
+		var _p4 = msg;
+		if (_p4.ctor === 'UserLoggedIn') {
+			var _p5 = A2(_elm_lang$core$Json_Decode$decodeString, _user$project$User$userDecoder, _p4._0);
+			if (_p5.ctor === 'Ok') {
+				var _p6 = _p5._0;
 				return {
 					ctor: '_Tuple2',
 					_0: _elm_lang$core$Native_Utils.update(
 						model,
-						{name: _p2.name, url: _p2.url, loginStatus: _user$project$User$Connected}),
+						{name: _p6.name, url: _p6.url, loginStatus: _user$project$User$Connected}),
 					_1: _elm_lang$core$Platform_Cmd$none
 				};
 			} else {
-				var _p3 = A2(_elm_lang$core$Debug$log, 'error', _p1._0);
+				var _p7 = A2(_elm_lang$core$Debug$log, 'error', _p5._0);
 				return {ctor: '_Tuple2', _0: model, _1: _elm_lang$core$Platform_Cmd$none};
 			}
 		} else {
@@ -8335,27 +8429,75 @@ var _user$project$User$UserLoggedIn = function (a) {
 	return {ctor: 'UserLoggedIn', _0: a};
 };
 
+var _user$project$Main$resultToMaybe = function (result) {
+	var _p0 = result;
+	if (_p0.ctor === 'Ok') {
+		return _elm_lang$core$Maybe$Just(_p0._0);
+	} else {
+		return A2(_elm_lang$core$Debug$log, _p0._0, _elm_lang$core$Maybe$Nothing);
+	}
+};
 var _user$project$Main$initialModel = {userModel: _user$project$User$initialUser};
-var _user$project$Main$init = {ctor: '_Tuple2', _0: _user$project$Main$initialModel, _1: _elm_lang$core$Platform_Cmd$none};
 var _user$project$Main$userLoggedIn = _elm_lang$core$Native_Platform.incomingPort('userLoggedIn', _elm_lang$core$Json_Decode$string);
 var _user$project$Main$userLoggedOut = _elm_lang$core$Native_Platform.incomingPort('userLoggedOut', _elm_lang$core$Json_Decode$string);
+var _user$project$Main$setStorage = _elm_lang$core$Native_Platform.outgoingPort(
+	'setStorage',
+	function (v) {
+		return v;
+	});
 var _user$project$Main$AppModel = function (a) {
 	return {userModel: a};
+};
+var _user$project$Main$modelConstructor = F4(
+	function (name, picture, status, userType) {
+		return _user$project$Main$AppModel(
+			{name: name, url: picture, loginStatus: status, userType: userType});
+	});
+var _user$project$Main$modelDecoder = A5(
+	_elm_lang$core$Json_Decode$map4,
+	_user$project$Main$modelConstructor,
+	A2(_elm_lang$core$Json_Decode$field, 'name', _elm_lang$core$Json_Decode$string),
+	A2(_elm_lang$core$Json_Decode$field, 'url', _elm_lang$core$Json_Decode$string),
+	A2(
+		_elm_lang$core$Json_Decode$andThen,
+		_user$project$User$loginStatusDecoder,
+		A2(_elm_lang$core$Json_Decode$field, 'loginStatus', _elm_lang$core$Json_Decode$string)),
+	A2(
+		_elm_lang$core$Json_Decode$andThen,
+		_user$project$User$userTypeDecoder,
+		A2(_elm_lang$core$Json_Decode$field, 'userType', _elm_lang$core$Json_Decode$string)));
+var _user$project$Main$init = function (savedModel) {
+	var _p1 = savedModel;
+	if (_p1.ctor === 'Just') {
+		return A2(
+			_elm_lang$core$Platform_Cmd_ops['!'],
+			A2(
+				_elm_lang$core$Maybe$withDefault,
+				_user$project$Main$initialModel,
+				_user$project$Main$resultToMaybe(
+					A2(_elm_lang$core$Json_Decode$decodeValue, _user$project$Main$modelDecoder, _p1._0))),
+			{ctor: '[]'});
+	} else {
+		return A2(
+			_elm_lang$core$Platform_Cmd_ops['!'],
+			_user$project$Main$initialModel,
+			{ctor: '[]'});
+	}
 };
 var _user$project$Main$UserMsg = function (a) {
 	return {ctor: 'UserMsg', _0: a};
 };
 var _user$project$Main$update = F2(
 	function (msg, model) {
-		var _p0 = msg;
-		switch (_p0.ctor) {
+		var _p2 = msg;
+		switch (_p2.ctor) {
 			case 'LoggedIn':
-				var _p1 = A2(
+				var _p3 = A2(
 					_user$project$User$update,
-					_user$project$User$UserLoggedIn(_p0._0),
+					_user$project$User$UserLoggedIn(_p2._0),
 					model.userModel);
-				var updatedUserModel = _p1._0;
-				var userCmd = _p1._1;
+				var updatedUserModel = _p3._0;
+				var userCmd = _p3._1;
 				return {
 					ctor: '_Tuple2',
 					_0: _elm_lang$core$Native_Utils.update(
@@ -8364,12 +8506,12 @@ var _user$project$Main$update = F2(
 					_1: A2(_elm_lang$core$Platform_Cmd$map, _user$project$Main$UserMsg, userCmd)
 				};
 			case 'LoggedOut':
-				var _p2 = A2(
+				var _p4 = A2(
 					_user$project$User$update,
-					_user$project$User$UserLoggedOut(_p0._0),
+					_user$project$User$UserLoggedOut(_p2._0),
 					model.userModel);
-				var updatedUserModel = _p2._0;
-				var userCmd = _p2._1;
+				var updatedUserModel = _p4._0;
+				var userCmd = _p4._1;
 				return {
 					ctor: '_Tuple2',
 					_0: _elm_lang$core$Native_Utils.update(
@@ -8394,6 +8536,27 @@ var _user$project$Main$update = F2(
 			default:
 				return {ctor: '_Tuple2', _0: model, _1: _elm_lang$core$Platform_Cmd$none};
 		}
+	});
+var _user$project$Main$updateWithStorage = F2(
+	function (msg, model) {
+		var _p5 = A2(_user$project$Main$update, msg, model);
+		var newModel = _p5._0;
+		var cmds = _p5._1;
+		return {
+			ctor: '_Tuple2',
+			_0: newModel,
+			_1: _elm_lang$core$Platform_Cmd$batch(
+				{
+					ctor: '::',
+					_0: _user$project$Main$setStorage(
+						_user$project$User$modelToValue(newModel.userModel)),
+					_1: {
+						ctor: '::',
+						_0: cmds,
+						_1: {ctor: '[]'}
+					}
+				})
+		};
 	});
 var _user$project$Main$LoggedOut = function (a) {
 	return {ctor: 'LoggedOut', _0: a};
@@ -8460,8 +8623,8 @@ var _user$project$Main$loggedOutHtml = A2(
 		_1: {ctor: '[]'}
 	});
 var _user$project$Main$view = function (app) {
-	var _p3 = app.userModel.loginStatus;
-	if (_p3.ctor === 'Connected') {
+	var _p6 = app.userModel.loginStatus;
+	if (_p6.ctor === 'Connected') {
 		return A2(
 			_elm_lang$html$Html$div,
 			{ctor: '[]'},
@@ -8503,8 +8666,18 @@ var _user$project$Main$view = function (app) {
 			});
 	}
 };
-var _user$project$Main$main = _elm_lang$html$Html$program(
-	{init: _user$project$Main$init, view: _user$project$Main$view, update: _user$project$Main$update, subscriptions: _user$project$Main$subscriptions})();
+var _user$project$Main$main = _elm_lang$html$Html$programWithFlags(
+	{init: _user$project$Main$init, view: _user$project$Main$view, update: _user$project$Main$updateWithStorage, subscriptions: _user$project$Main$subscriptions})(
+	_elm_lang$core$Json_Decode$oneOf(
+		{
+			ctor: '::',
+			_0: _elm_lang$core$Json_Decode$null(_elm_lang$core$Maybe$Nothing),
+			_1: {
+				ctor: '::',
+				_0: A2(_elm_lang$core$Json_Decode$map, _elm_lang$core$Maybe$Just, _elm_lang$core$Json_Decode$value),
+				_1: {ctor: '[]'}
+			}
+		}));
 var _user$project$Main$NoOp = {ctor: 'NoOp'};
 
 var Elm = {};
