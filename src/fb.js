@@ -1,4 +1,11 @@
-var app = Elm.Main.fullscreen();
+var storedState = localStorage.getItem('elm-facebook-api');
+var startingState = storedState ? JSON.parse(storedState) : null;
+
+var app = Elm.Main.fullscreen(startingState);
+
+app.ports.setStorage.subscribe(function(state) {
+    localStorage.setItem('elm-facebook-api', JSON.stringify(state));
+});
 
 window.fbAsyncInit = function () {
 

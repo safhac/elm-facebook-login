@@ -4,21 +4,22 @@ import Html exposing (..)
 import Html.Attributes exposing (..)
 import Html
 import Facebook
-import User
+import User exposing (..)
 import Html.Events exposing (onClick)
-import Debug exposing (log)
+import Json.Encode as Encode exposing (..)
+import Json.Decode as Decode exposing (string, decodeValue, map4, andThen, at)
+
+
+-- import Debug exposing (log)
 -- import Html.Attributes exposing (..)
-
-
 -- MAIN
 
 
-main : Program Never AppModel Msg
 main =
-    Html.program
+    Html.programWithFlags
         { init = init
         , view = view
-        , update = update
+        , update = updateWithStorage
         , subscriptions = subscriptions
         }
 
@@ -38,13 +39,24 @@ initialModel =
     }
 
 
-init : ( AppModel, Cmd Msg )
-init =
-    ( initialModel, Cmd.none )
+init : Maybe (Encode.Value) -> ( AppModel, Cmd Msg )
+init savedModel =
+    case savedModel of
+        Just value  ->
+            Maybe.withDefault initialModel (Decode.decodeValue modelDecoder value) ! []   
+    -- Maybe.withDefault initialModel savedModel ! []
 
+modelDecoder : Decode.Decoder AppModel
+modelDecoder =
+  Decode.map4 AppModel
+    ( Decode.at "name" Decode.string )
+    ( Decode.at "url" Decode.string )
+    ( Decode.at "loginStatus" (Decode.string User.loginStatusDecoder) )
+    ( Decode.at "userType" (Decode.string User.userTypeDecoder) )
 
-
+    
 -- MESSAGE
+
 
 type Msg
     = NoOp
@@ -56,11 +68,16 @@ type Msg
 
 
 
-
 -- PORTS
 
+
 port userLoggedIn : (String -> msg) -> Sub msg
+
+
 port userLoggedOut : (String -> msg) -> Sub msg
+
+
+port setStorage : Encode.Value -> Cmd msg
 
 
 
@@ -70,35 +87,42 @@ port userLoggedOut : (String -> msg) -> Sub msg
 subscriptions : AppModel -> Sub Msg
 subscriptions model =
     Sub.batch
-    [ userLoggedIn LoggedIn
-    , userLoggedOut LoggedOut
-    ]
+        [ userLoggedIn LoggedIn
+        , userLoggedOut LoggedOut
+        ]
 
 
--- stringToMsg : String -> Msg
--- stringToMsg json =
---     UserStringMsg json
-    
 
 -- UPDATE
+
+
+updateWithStorage : Msg -> AppModel -> ( AppModel, Cmd Msg )
+updateWithStorage msg model =
+    let
+        ( newModel, cmds ) =
+            update msg model
+    in
+        ( newModel
+        , Cmd.batch [ setStorage (User.modelToValue newModel.userModel), cmds ]
+        )
+
 
 update : Msg -> AppModel -> ( AppModel, Cmd Msg )
 update msg model =
     case msg of
-
         LoggedIn json ->
             let
-                (updatedUserModel, userCmd) =
+                ( updatedUserModel, userCmd ) =
                     User.update (User.UserLoggedIn json) model.userModel
             in
-                 ({ model | userModel = updatedUserModel }, Cmd.map UserMsg userCmd) 
+                ( { model | userModel = updatedUserModel }, Cmd.map UserMsg userCmd )
 
         LoggedOut loggedOutMsg ->
             let
-                (updatedUserModel, userCmd) =
+                ( updatedUserModel, userCmd ) =
                     User.update (User.UserLoggedOut loggedOutMsg) model.userModel
             in
-                 ({ model | userModel = updatedUserModel }, Cmd.none) 
+                ( { model | userModel = updatedUserModel }, Cmd.none )
 
         Login ->
             ( model, Facebook.login {} )
@@ -108,7 +132,6 @@ update msg model =
 
         _ ->
             ( model, Cmd.none )
-
 
 
 
@@ -122,8 +145,8 @@ view app =
             div []
                 [ div [] [ text app.userModel.name ]
                 , loggedInHtml app.userModel.url
-                
                 ]
+
         _ ->
             div []
                 [ div [] [ text app.userModel.name ]
@@ -133,9 +156,11 @@ view app =
 
 loggedInHtml : String -> Html Msg
 loggedInHtml pic =
-    div [] [ img [ src pic ] [] 
-    , button [ onClick Logout ] [ text "Logout" ]
-    ]
+    div []
+        [ img [ src pic ] []
+        , button [ onClick Logout ] [ text "Logout" ]
+        ]
+
 
 loggedOutHtml : Html Msg
 loggedOutHtml =

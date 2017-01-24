@@ -1,0 +1,36 @@
+The definition of `main` does not match its type annotation. - The type annotation for `main` says it is a:
+
+    Program (Maybe AppModel) AppModel Msg
+
+But the definition (shown above) is a:
+
+    Program Never AppModel Msg
+The argument to function `program` is causing a mismatch. - Function `program` is expecting the argument to be:
+
+    { ..., init : ( AppModel, Cmd Msg ) }
+
+But it is:
+
+    { ..., init : Maybe AppModel -> ( AppModel, Cmd Msg ) }
+
+Hint: Problem in the `init` field. It looks like a function needs 1 more
+argument.
+
+
+=======================================================================================
+Your `main` is demanding an unsupported type as a flag. - The specific unsupported type is:
+
+    User.LoginStatus
+
+The types of values that can flow through in and out of Elm include:
+
+    Ints, Floats, Bools, Strings, Maybes, Lists, Arrays, Tuples, Json.Values,
+    and concrete records.
+Your `main` is demanding an unsupported type as a flag. - The specific unsupported type is:
+
+    User.UserType
+
+The types of values that can flow through in and out of Elm include:
+
+    Ints, Floats, Bools, Strings, Maybes, Lists, Arrays, Tuples, Json.Values,
+    and concrete records.
