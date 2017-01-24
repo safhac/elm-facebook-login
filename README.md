@@ -3,9 +3,6 @@
 A basic Elm ~~0.17~~ 0.18 app for logging in with facebook authorization
 
 * Work in progress
-* Added features:
-``` Decode user profile picture ```
-``` Save model to local-storage ```
 
 
 (Readme copied and modified from https://github.com/moarwick/elm-webpack-starter)
@@ -47,3 +44,10 @@ elm package install
 
 
 
+### Changelog
+
+**Ver 0.0.2**
+* Decode and display Facebook profile picture
+
+**Ver 0.0.3**
+* Save Model to localstorage
