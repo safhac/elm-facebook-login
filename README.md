@@ -1,9 +1,11 @@
 # elm-facebook-login
 
-A completely basic Elm ~~0.17~~ 0.18 app for logging in with facebook authorization
+A basic Elm ~~0.17~~ 0.18 app for logging in with facebook authorization
 
 * Work in progress
-* Model needs to logged-in user data and unauthorized users
+* Added features:
+``` Decode user profile picture ```
+``` Save model to local-storage ```
 
 
 (Readme copied and modified from https://github.com/moarwick/elm-webpack-starter)
