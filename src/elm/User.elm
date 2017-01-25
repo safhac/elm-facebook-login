@@ -1,6 +1,6 @@
 module User exposing (..)
 
-import Json.Decode as Decode exposing (decodeString, field, string, at, Decoder, map2, succeed)
+import Json.Decode as Decode exposing (decodeString, field, string, at, Decoder, map3, succeed)
 import Json.Encode as Encode exposing (..)
 import Debug exposing (log)
 
@@ -9,7 +9,8 @@ import Debug exposing (log)
 
 
 type alias Model =
-    { name : String
+    { uid: String
+    , name : String
     , url : String
     , loginStatus : LoginStatus
     , userType : UserType
@@ -33,15 +34,17 @@ type LoginStatus
 
 initialUser : Model
 initialUser =
-    { name = ""
+    { uid = ""
+    , name = ""
     , url = ""
     , loginStatus = UnAuthorised
     , userType = Unknown
     }
 
-newUser : String -> String -> Model
-newUser name picture =
-    { name = name
+newUser : String -> String -> String -> Model
+newUser uid name picture =
+    { uid = uid
+    , name = name
     , url = picture
     , loginStatus = Connected
     , userType = Client
@@ -67,7 +70,8 @@ nameDecoder json =
 
 userDecoder : Decoder Model
 userDecoder =
-    map2 newUser
+    map3 newUser
+        (field "id" Decode.string) 
         (field "name" Decode.string) 
         (field "picture" <| (field "data" <| (field "url" Decode.string) )) 
 
@@ -79,11 +83,14 @@ setName newName user =
 
 loginStatusDecoder : String -> Decode.Decoder LoginStatus
 loginStatusDecoder status =
-    case status of
-        "Connected" -> Decode.succeed Connected
-        "UnAuthorised" -> Decode.succeed UnAuthorised
-        "Disconnected" -> Decode.succeed Disconnected
-        _ -> Decode.fail (status ++ " is not a recognized tag for login status")
+    let _ 
+        = Debug.log "loginStatusDecoder " status
+    in
+        case status of
+            "Connected" -> Decode.succeed Connected
+            "UnAuthorised" -> Decode.succeed UnAuthorised
+            "Disconnected" -> Decode.succeed Disconnected
+            _ -> Decode.fail (status ++ " is not a recognized tag for login status")
 
 
 userTypeDecoder : String -> Decode.Decoder UserType
@@ -103,7 +110,8 @@ modelToValue : Model -> Encode.Value
 modelToValue model =
   Encode.object
     [
-        ( "name", Encode.string model.name )
+        ( "uid", Encode.string model.uid )
+        , ( "name", Encode.string model.name )
         , ( "url", Encode.string model.url )
         , ( "loginStatus", loginStatusToValue model.loginStatus )
         , ( "userType", userTypeToValue model.userType )
@@ -138,17 +146,20 @@ update : Msg -> Model -> ( Model, Cmd Msg )
 update msg model =
     case msg of
         UserLoggedIn json ->
-            -- let _ = 
-            --     Debug.log "json" (decodeString userDecoder json)
-            -- in
+            let _ = 
+                Debug.log "User.update UserLoggedIn " (decodeString userDecoder json)
+            in
             case decodeString userDecoder json of
                 (Ok userData) ->
-                    ({ model | name = userData.name, url=userData.url, loginStatus=Connected }, Cmd.none)
+                    ({ model | uid = userData.uid
+                        , name = userData.name
+                        , url = userData.url
+                        , loginStatus = Connected }, Cmd.none)
                 (Err error) ->
                     let _ = 
                         Debug.log "error" error
                     in
-                    (model, Cmd.none)   
+                        (model, Cmd.none)   
                  
         UserLoggedOut loggedOut ->
             ( initialUser , Cmd.none)

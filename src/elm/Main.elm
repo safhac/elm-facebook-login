@@ -46,7 +46,10 @@ init : Maybe (Encode.Value) -> ( AppModel, Cmd Msg )
 init savedModel =
     case savedModel of
         Just value  ->
-            Maybe.withDefault initialModel (Decode.decodeValue modelDecoder value |> resultToMaybe ) ! []
+            let _ = 
+                Debug.log "init value " value
+            in
+                Maybe.withDefault initialModel (Decode.decodeValue modelDecoder value |> resultToMaybe ) ! []
         _ -> 
             initialModel ! [] 
 
@@ -56,7 +59,8 @@ Decode model from localstorage
  --}
 modelDecoder : Decode.Decoder AppModel
 modelDecoder =
-  Decode.map4 modelConstructor
+  Decode.map5 modelConstructor
+    (field "uid" Decode.string) 
     (field "name" Decode.string) 
     (field "url" Decode.string)
     (field "loginStatus" Decode.string |> andThen User.loginStatusDecoder )
@@ -66,9 +70,10 @@ modelDecoder =
 {--
 helper to create the model from the decoder
  --}
-modelConstructor : String -> String -> User.LoginStatus -> User.UserType -> AppModel
-modelConstructor name picture status userType =
-    AppModel { name = name
+modelConstructor : String -> String -> String -> User.LoginStatus -> User.UserType -> AppModel
+modelConstructor uid name picture status userType =
+    AppModel { uid = uid
+    , name = name
     , url = picture
     , loginStatus = status
     , userType = userType
@@ -129,6 +134,8 @@ updateWithStorage msg model =
     let
         ( newModel, cmds ) =
             update msg model
+        _ = Debug.log "updateWithStorage " msg
+        
     in
         ( newModel
         , Cmd.batch [ setStorage (User.modelToValue newModel.userModel), cmds ]
@@ -142,6 +149,7 @@ update msg model =
             let
                 ( updatedUserModel, userCmd ) =
                     User.update (User.UserLoggedIn json) model.userModel
+                _ = Debug.log "update LoggedIn " json
             in
                 ( { model | userModel = updatedUserModel }, Cmd.map UserMsg userCmd )
 
@@ -149,14 +157,21 @@ update msg model =
             let
                 ( updatedUserModel, userCmd ) =
                     User.update (User.UserLoggedOut loggedOutMsg) model.userModel
+                _ = Debug.log "update LoggedOut " loggedOutMsg
             in
                 ( { model | userModel = updatedUserModel }, Cmd.none )
 
         Login ->
-            ( model, Facebook.login {} )
+            let 
+                _ = Debug.log "update Login " Login
+            in
+                ( model, Facebook.login {} )
 
         Logout ->
-            ( model, Facebook.logout {} )
+            let 
+                _ = Debug.log "update Login " Login
+            in
+                ( model, Facebook.logout {} )
 
         _ ->
             ( model, Cmd.none )

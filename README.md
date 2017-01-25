@@ -15,6 +15,7 @@ cd my-elm-project
 npm install
 ```
 
+
 Re-initialize the project folder as your own repo:
 ```
 rm -rf .git
@@ -23,18 +24,15 @@ git add .
 git commit -m 'first commit'
 ```
 
-Install Elm and elm-live globally:
-```
-npm install -g elm elm-live
-```
+
 
 Install Elm's dependencies:
 ```
 elm package install
 ```
-### Add a start script to your package.json
+### Run with webpack
 ```
-"start" : "elm-live src/Main.elm --output=src/main.js --port=8000 --open"
+npm start
 ```
 * Access app at `http://localhost:8000/`
 * Get coding! The entry point file is `src/Main.elm`
