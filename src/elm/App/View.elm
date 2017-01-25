@@ -1,12 +1,12 @@
 module App.View exposing (..)
 
 import App.Model exposing (..)
-import App.Update exposing (..)
+import App.Update as Update exposing (..)
+import User.Model as User exposing (..)
 
 import Html exposing (..)
 import Html.Attributes exposing (..)
-import Facebook
-import User exposing (..)
+
 import Html.Events exposing (onClick)
 
 
@@ -15,7 +15,7 @@ import Html.Events exposing (onClick)
 -- VIEW
 
 
-view : AppModel -> Html Msg
+view : AppModel -> Html Update.Msg
 view app =
     case app.userModel.loginStatus of
         User.Connected ->
@@ -31,7 +31,7 @@ view app =
                 ]
 
 
-loggedInHtml : String -> Html Msg
+loggedInHtml : String -> Html Update.Msg
 loggedInHtml pic =
     div []
         [ img [ src pic ] []
@@ -39,6 +39,6 @@ loggedInHtml pic =
         ]
 
 
-loggedOutHtml : Html Msg
+loggedOutHtml : Html Update.Msg
 loggedOutHtml =
     button [ onClick Login ] [ text "Login" ]

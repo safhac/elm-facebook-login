@@ -1,5 +1,4 @@
-module User exposing (..)
-
+module User.Model exposing (..)
 import Json.Decode as Decode exposing (decodeString, field, string, at, Decoder, map3, succeed)
 import Json.Encode as Encode exposing (..)
 import Debug exposing (log)

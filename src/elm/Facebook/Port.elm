@@ -1,4 +1,4 @@
-port module Facebook exposing (..)
+port module Facebook.Port exposing (..)
 
 port login : {} -> Cmd msg
 

@@ -1,8 +1,10 @@
-module App.Update exposing (init, update, updateWithStorage, Msg(..))
+port module App.Update exposing (init, update, updateWithStorage, Msg(..))
 
-import App.Model exposing (..)
-import User.Model exposing (..)
-
+import App.Model exposing (AppModel, initialModel)
+import User.Model as User exposing (..)
+import Facebook.Port as Facebook
+import Json.Encode as Encode exposing (..)
+import Json.Decode as Decode exposing (..)
 
 -- MESSAGE
 
@@ -31,6 +33,10 @@ init savedModel =
             initialModel ! [] 
 
 
+
+-- PORT
+
+port setStorage : Encode.Value -> Cmd msg
 
 -- UPDATE
 
@@ -83,3 +89,40 @@ update msg model =
             ( model, Cmd.none )
 
             
+
+
+-- DECODER
+
+-- Decode the saved model from localstorage
+modelDecoder : Decode.Decoder AppModel
+modelDecoder =
+  Decode.map5 modelConstructor
+    (field "uid" Decode.string) 
+    (field "name" Decode.string) 
+    (field "url" Decode.string)
+    (field "loginStatus" Decode.string |> andThen User.loginStatusDecoder )
+    (field "userType" Decode.string |> andThen User.userTypeDecoder )
+
+
+
+
+-- HELPERS
+
+-- helper to construct model from the decoded object
+modelConstructor : String -> String -> String -> User.LoginStatus -> User.UserType -> AppModel
+modelConstructor uid name picture status userType =
+    AppModel { uid = uid
+    , name = name
+    , url = picture
+    , loginStatus = status
+    , userType = userType
+    }
+
+
+
+-- Maybe object helper 
+resultToMaybe : Result String AppModel -> Maybe AppModel
+resultToMaybe result =
+  case result of
+    Result.Ok model -> Just model
+    Result.Err error -> Debug.log error Nothing    

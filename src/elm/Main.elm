@@ -1,15 +1,14 @@
 port module Main exposing (..)
 
-import App.Model exposing (Model)
-import App.Update exposing (init, update, Msg)
+import App.Model exposing (AppModel)
+import App.Update as Update exposing (init, update, updateWithStorage, Msg)
 import App.View exposing (view)
-
-import Facebook
-
+import Html exposing (programWithFlags)
+import Json.Encode as Encode exposing (Value)
 
 -- MAIN
 
-main : Program (Maybe Encode.Value) AppModel Msg
+main : Program (Maybe Encode.Value) AppModel Update.Msg
 main =
     Html.programWithFlags
         { init = init
@@ -21,11 +20,11 @@ main =
 
 -- SUBSCRIPTIONS
 
-subscriptions : AppModel -> Sub Msg
+subscriptions : AppModel -> Sub Update.Msg
 subscriptions model =
     Sub.batch
-        [ userLoggedIn LoggedIn
-        , userLoggedOut LoggedOut
+        [ userLoggedIn Update.LoggedIn
+        , userLoggedOut Update.LoggedOut
         ]
 
 
@@ -39,8 +38,6 @@ port userLoggedIn : (String -> msg) -> Sub msg
 
 port userLoggedOut : (String -> msg) -> Sub msg
 
-
-port setStorage : Encode.Value -> Cmd msg
 
 
 
