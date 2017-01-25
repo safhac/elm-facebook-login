@@ -2,6 +2,8 @@ port module App.Update exposing (init, update, updateWithStorage, Msg(..))
 
 import App.Model exposing (AppModel, initialModel)
 import User.Model as User exposing (..)
+import User.Decoder exposing (modelToValue, loginStatusDecoder, userTypeDecoder)
+import User.Update as UserUpdate exposing (..)
 import Facebook.Port as Facebook
 import Json.Encode as Encode exposing (..)
 import Json.Decode as Decode exposing (..)
@@ -14,7 +16,7 @@ type Msg
     | Logout
     | LoggedIn String
     | LoggedOut String
-    | UserMsg User.Msg
+    | UserMsg UserUpdate.Msg
 
 
 
@@ -50,7 +52,7 @@ updateWithStorage msg model =
         
     in
         ( newModel
-        , Cmd.batch [ setStorage (User.modelToValue newModel.userModel), cmds ]
+        , Cmd.batch [ setStorage (modelToValue newModel.userModel), cmds ]
         )
 
 
@@ -60,7 +62,7 @@ update msg model =
         LoggedIn json ->
             let
                 ( updatedUserModel, userCmd ) =
-                    User.update (User.UserLoggedIn json) model.userModel
+                    UserUpdate.update (UserUpdate.UserLoggedIn json) model.userModel
                 _ = Debug.log "update LoggedIn " json
             in
                 ( { model | userModel = updatedUserModel }, Cmd.map UserMsg userCmd )
@@ -68,7 +70,7 @@ update msg model =
         LoggedOut loggedOutMsg ->
             let
                 ( updatedUserModel, userCmd ) =
-                    User.update (User.UserLoggedOut loggedOutMsg) model.userModel
+                    UserUpdate.update (UserLoggedOut loggedOutMsg) model.userModel
                 _ = Debug.log "update LoggedOut " loggedOutMsg
             in
                 ( { model | userModel = updatedUserModel }, Cmd.none )
@@ -100,8 +102,8 @@ modelDecoder =
     (field "uid" Decode.string) 
     (field "name" Decode.string) 
     (field "url" Decode.string)
-    (field "loginStatus" Decode.string |> andThen User.loginStatusDecoder )
-    (field "userType" Decode.string |> andThen User.userTypeDecoder )
+    (field "loginStatus" Decode.string |> andThen loginStatusDecoder )
+    (field "userType" Decode.string |> andThen userTypeDecoder )
 
 
 
