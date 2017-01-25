@@ -1,7 +1,7 @@
 {
   "name": "elm-facebook-api",
   "version": "0.0.3",
-  "description": "Elm app that interop's Facebook API to authenticate users",
+  "description": "Elm app based on webpack starter kit to authenticate users with Facebook and save login status in localstorage",
   "main": "src/main.js",
   "source-directories" : "./src",
   "scripts": {
@@ -39,7 +39,7 @@
     "Webpack"
   ],
   "author": "Asaf Cohen <safhac@gmail.com>",
-  "license": "free",
+  "license": "MIT",
   "repository": {
     "type": "git",
     "url": "git@github.com:safhac/elm-facebook-login"
