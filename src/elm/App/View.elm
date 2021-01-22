@@ -2,13 +2,10 @@ module App.View exposing (..)
 
 import App.Model exposing (..)
 import App.Update as Update exposing (..)
-import User.Model as User exposing (..)
-
 import Html exposing (..)
 import Html.Attributes exposing (..)
-
 import Html.Events exposing (onClick)
-
+import User.Model as User exposing (..)
 
 
 

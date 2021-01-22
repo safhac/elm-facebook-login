@@ -1,16 +1,19 @@
 port module Main exposing (..)
 
 import App.Model exposing (AppModel)
-import App.Update as Update exposing (init, update, updateWithStorage, Msg)
+import App.Update as Update exposing (Msg, init, update, updateWithStorage)
 import App.View exposing (view)
-import Html exposing (programWithFlags)
+import Browser
 import Json.Encode as Encode exposing (Value)
+
+
 
 -- MAIN
 
+
 main : Program (Maybe Encode.Value) AppModel Update.Msg
 main =
-    Html.programWithFlags
+    Browser.element
         { init = init
         , view = view
         , update = updateWithStorage
@@ -18,7 +21,9 @@ main =
         }
 
 
+
 -- SUBSCRIPTIONS
+
 
 subscriptions : AppModel -> Sub Update.Msg
 subscriptions model =
@@ -29,7 +34,6 @@ subscriptions model =
 
 
 
-
 -- PORTS
 
 
@@ -37,14 +41,3 @@ port userLoggedIn : (String -> msg) -> Sub msg
 
 
 port userLoggedOut : (String -> msg) -> Sub msg
-
-
-
-
-
-
-
-
-
-
-
