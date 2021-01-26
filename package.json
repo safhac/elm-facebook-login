@@ -3,10 +3,10 @@
   "version": "0.0.3",
   "description": "Elm app based on webpack starter kit to authenticate users with Facebook and save login status in localstorage",
   "main": "src/main.js",
-  "source-directories" : "./src",
+  "source-directories": "./src",
   "scripts": {
     "test": "echo \"Error: no test specified\" && exit 1",
-    "start-live" : "elm-live src/Main.elm --output=src/main.js --port=8000 --open",
+    "start-live": "elm-live src/Main.elm --output=src/main.js --port=8000 --open",
     "start": "webpack-dev-server --hot --inline --content-base src/",
     "build": "rimraf dist && webpack",
     "reinstall": "rimraf node_modules && npm uninstall -g elm && npm i -g elm && npm i && elm package install"
@@ -18,7 +18,7 @@
     "css-loader": "^0.25.0",
     "elm": "^0.18.0",
     "elm-hot-loader": "^0.5.2",
-    "elm-webpack-loader": "^3.0.6",
+    "elm-webpack-loader": "^4.5.0",
     "extract-text-webpack-plugin": "^1.0.1",
     "file-loader": "^0.9.0",
     "html-webpack-plugin": "^2.17.0",
@@ -43,5 +43,9 @@
   "repository": {
     "type": "git",
     "url": "git@github.com:safhac/elm-facebook-login"
+  },
+  "dependencies": {
+    "live-server-https": "^0.0.2",
+    "node-gyp": "^3.8.0"
   }
 }

@@ -1,14 +1,17 @@
-port module App.Update exposing (init, update, updateWithStorage, Msg(..))
+port module App.Update exposing (Msg(..), init, update, updateWithStorage)
 
 import App.Model exposing (AppModel, initialModel)
-import User.Model as User exposing (..)
-import User.Decoder exposing (modelToValue, loginStatusDecoder, userTypeDecoder)
-import User.Update as UserUpdate exposing (..)
 import Facebook.Port as Facebook
-import Json.Encode as Encode exposing (..)
 import Json.Decode as Decode exposing (..)
+import Json.Encode as Encode exposing (..)
+import User.Decoder exposing (loginStatusDecoder, modelToValue, userTypeDecoder)
+import User.Model as User exposing (..)
+import User.Update as UserUpdate exposing (..)
+
+
 
 -- MESSAGE
+
 
 type Msg
     = NoOp
@@ -23,22 +26,31 @@ type Msg
 -- INIT
 
 
-init : Maybe (Encode.Value) -> ( AppModel, Cmd Msg )
+init : Maybe Encode.Value -> ( AppModel, Cmd Msg )
 init savedModel =
     case savedModel of
-        Just value  ->
-            let _ = 
-                Debug.log "init value " value
+        Just value ->
+            let
+                _ =
+                    Debug.log "init value " value
             in
-                Maybe.withDefault initialModel (Decode.decodeValue modelDecoder value |> resultToMaybe ) ! []
-        _ -> 
-            initialModel ! [] 
+            ( Maybe.withDefault initialModel (Decode.decodeValue modelDecoder value |> resultToMaybe)
+            , Cmd.none
+            )
+
+        _ ->
+            ( initialModel
+            , Cmd.none
+            )
 
 
 
 -- PORT
 
+
 port setStorage : Encode.Value -> Cmd msg
+
+
 
 -- UPDATE
 
@@ -48,12 +60,13 @@ updateWithStorage msg model =
     let
         ( newModel, cmds ) =
             update msg model
-        _ = Debug.log "updateWithStorage " msg
-        
+
+        _ =
+            Debug.log "updateWithStorage " msg
     in
-        ( newModel
-        , Cmd.batch [ setStorage (modelToValue newModel.userModel), cmds ]
-        )
+    ( newModel
+    , Cmd.batch [ setStorage (modelToValue newModel.userModel), cmds ]
+    )
 
 
 update : Msg -> AppModel -> ( AppModel, Cmd Msg )
@@ -63,68 +76,80 @@ update msg model =
             let
                 ( updatedUserModel, userCmd ) =
                     UserUpdate.update (UserUpdate.UserLoggedIn json) model.userModel
-                _ = Debug.log "update LoggedIn " json
+
+                _ =
+                    Debug.log "update LoggedIn " json
             in
-                ( { model | userModel = updatedUserModel }, Cmd.map UserMsg userCmd )
+            ( { model | userModel = updatedUserModel }, Cmd.map UserMsg userCmd )
 
         LoggedOut loggedOutMsg ->
             let
                 ( updatedUserModel, userCmd ) =
                     UserUpdate.update (UserLoggedOut loggedOutMsg) model.userModel
-                _ = Debug.log "update LoggedOut " loggedOutMsg
+
+                _ =
+                    Debug.log "update LoggedOut " loggedOutMsg
             in
-                ( { model | userModel = updatedUserModel }, Cmd.none )
+            ( { model | userModel = updatedUserModel }, Cmd.none )
 
         Login ->
-            let 
-                _ = Debug.log "update Login " Login
+            let
+                _ =
+                    Debug.log "update Login " Login
             in
-                ( model, Facebook.login {} )
+            ( model, Facebook.login {} )
 
         Logout ->
-            let 
-                _ = Debug.log "update Login " Login
+            let
+                _ =
+                    Debug.log "update Login " Login
             in
-                ( model, Facebook.logout {} )
+            ( model, Facebook.logout {} )
 
         _ ->
             ( model, Cmd.none )
 
-            
 
 
 -- DECODER
-
 -- Decode the saved model from localstorage
+
+
 modelDecoder : Decode.Decoder AppModel
 modelDecoder =
-  Decode.map5 modelConstructor
-    (field "uid" Decode.string) 
-    (field "name" Decode.string) 
-    (field "url" Decode.string)
-    (field "loginStatus" Decode.string |> andThen loginStatusDecoder )
-    (field "userType" Decode.string |> andThen userTypeDecoder )
-
+    Decode.map5 modelConstructor
+        (field "uid" Decode.string)
+        (field "name" Decode.string)
+        (field "url" Decode.string)
+        (field "loginStatus" Decode.string |> andThen loginStatusDecoder)
+        (field "userType" Decode.string |> andThen userTypeDecoder)
 
 
 
 -- HELPERS
-
 -- helper to construct model from the decoded object
+
+
 modelConstructor : String -> String -> String -> User.LoginStatus -> User.UserType -> AppModel
 modelConstructor uid name picture status userType =
-    AppModel { uid = uid
-    , name = name
-    , url = picture
-    , loginStatus = status
-    , userType = userType
-    }
+    AppModel
+        { uid = uid
+        , name = name
+        , url = picture
+        , loginStatus = status
+        , userType = userType
+        }
 
 
 
--- Maybe object helper 
-resultToMaybe : Result String AppModel -> Maybe AppModel
+-- Maybe object helper
+
+
+resultToMaybe : Result Error AppModel -> Maybe AppModel
 resultToMaybe result =
-  case result of
-    Result.Ok model -> Just model
-    Result.Err error -> Debug.log error Nothing    
+    case result of
+        Result.Ok model ->
+            Just model
+
+        Result.Err error ->
+            Nothing

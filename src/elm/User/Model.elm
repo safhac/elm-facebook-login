@@ -3,13 +3,11 @@ module User.Model exposing (..)
 -- import Json.Decode as Decode exposing (decodeString, field, string, at, Decoder, map3, succeed)
 -- import Json.Encode as Encode exposing (..)
 -- import Debug exposing (log)
-
-
 -- MODEL
 
 
 type alias Model =
-    { uid: String
+    { uid : String
     , name : String
     , url : String
     , loginStatus : LoginStatus
@@ -29,6 +27,8 @@ type LoginStatus
     | UnAuthorised
     | Disconnected
 
+
+
 -- INIT
 
 
@@ -41,6 +41,7 @@ initialUser =
     , userType = Unknown
     }
 
+
 newUser : String -> String -> String -> Model
 newUser uid name picture =
     { uid = uid
@@ -52,10 +53,7 @@ newUser uid name picture =
 
 
 
-
 -- VIEW
-
-
 -- view : Model -> Html Msg
 -- view model =
 --     div []

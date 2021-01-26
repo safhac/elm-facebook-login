@@ -1,15 +1,20 @@
 // pull in desired CSS/SASS files
-require('./styles/main.scss');
+//require('./styles/main.scss');
 
 // Elm.Main.embed( document.getElementById( 'main' ) );
-var Elm = require('../elm/Main');
+//var Elm = require('../elm/Main');
 
 var storedState = localStorage.getItem('elm-facebook-api');
 var storedAuthResponse = localStorage.getItem('elm-facebook-api-authResponse');
 var startingState = storedState ? JSON.parse(storedState) : null;
 var alreadyAuthed = storedState ? JSON.parse(storedAuthResponse) : null;
 
-var app = Elm.Main.fullscreen(startingState);
+//var app = Elm.Main.fullscreen(startingState);
+var app = Elm.Main.init({
+  flags: startingState,
+  node: document.getElementById('myapp')
+});
+
 
 app.ports.setStorage.subscribe(function (state) {
     localStorage.setItem('elm-facebook-api', JSON.stringify(state));
